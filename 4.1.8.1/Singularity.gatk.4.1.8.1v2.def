@@ -1,0 +1,111 @@
+#!/bin/bash
+
+
+Bootstrap: yum
+#OSVersion:7.8
+MirrorURL: http://mirror.centos.org/centos-7/7.8.2003/os/x86_64/
+Include: yum
+#From: default/centos:7.7
+#Bootstrap : localimage
+#From : /data/git/GATK/4.1.8.1/centos_latest.sif
+
+%labels
+
+	MAINTAINER Hugo Mananet
+
+
+%environment
+
+	JAVA_LIBRARY_PATH=/usr/lib/jni
+	JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
+	export JAVA_LIBRARY_PATH JAVA_HOME
+	PATH=/opt/conda/envs/gatk/bin:/opt/miniconda/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+	export PATH
+	. /opt/miniconda/etc/profile.d/conda.sh
+	conda activate gatk
+
+
+	export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib:/usr/local/lib/R/lib:/usr/local/lib/R/site-library
+
+%files
+
+	# /data/git/GATK/4.1.8.1/install_R_packages.R /opt
+	# gatk-4.1.2.0.zip
+
+
+%post
+
+	http_proxy="http://10.1.50.1:8080/"
+	https_proxy="http://10.1.50.1:8080/"
+	HTTP_PROXY="http://10.1.50.1:8080/"
+	HTTPS_PROXY="http://10.1.50.1:8080/"
+	ftp_proxy="http://10.1.50.1:8080/"
+	FTP_proxy="http://10.1.50.1:8080/"
+	export HTTPS_PROXY HTTP_PROXY https_proxy http_proxy ftp_proxy FTP_proxy
+
+	mkdir /soft
+	mkdir /work
+	mkdir /user1
+	mkdir /user2
+	mkdir /tmp3
+
+
+	echo "\n\n######## Installing utilities needed by GATK 4.1.8.1 ########\n\n"
+
+	yum update -y && \
+ 	yum install -y deltarpm
+ 	
+ 	yum update -y && \
+	yum install -y epel-release
+
+	yum update -y 
+ 	yum install -y wget aria2 make python gcc gcc-c++ unzip bzip2-devel bc less BEDTools samtools gcc-gfortran java-1.8.0-openjdk htslib-tools gnupg2 libcurl-devel
+
+	#yum install -y dnf-plugins-core
+	#yum config-manager --set-enabled PowerTools
+ 	yum group install -y "Development Tools"
+ 	yum install -y ncurses-devel bzip2-devel xz-devel libxml2 libxml2-devel libxslt libxslt-devel glibc-devel zlib-devel texinfo gtk2-devel tcl-devel tk-devel kernel-headers kernel-devel gtk+-devel qt-devel readline-devel
+
+
+	#Recommandation d'utiliser l'installation des packages R via conda depuis la version 4.1.8.0			
+	#wget https://cran.r-project.org/src/base/R-3/R-3.2.5.tar.gz
+	#tar zxvf R-3.2.5.tar.gz && cd R-3.2.5/
+	#./configure --with-x=no
+	#make
+	#make install
+	
+
+	echo "\n\n######## Installing the GATK 4.1.8.1 suite ########\n\n"
+	cd /opt/ && wget https://github.com/broadinstitute/gatk/releases/download/4.1.8.1/gatk-4.1.8.1.zip
+	unzip gatk-4.1.8.1.zip
+	rm gatk-4.1.8.1.zip
+	ln -s /opt/gatk-4.1.8.1/gatk /usr/bin/gatk
+	ln -s /opt/gatk-package-4.1.8.1-local.jar /usr/bin/gatk-4.1.8.1.jar
+
+
+
+
+	wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh
+	bash -f Miniconda3-latest-Linux-x86_64.sh -b -p /opt/miniconda
+
+
+	PATH=/opt/conda/envs/gatk/bin:/opt/miniconda/bin:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin
+	export PATH
+	ln -s /opt/miniconda/etc/profile.d/conda.sh /etc/profile.d/conda.sh
+
+	conda env create -f /opt/gatk-4.1.8.1/gatkcondaenv.yml
+
+
+%runscript
+
+
+exec gatk "$@"
+
+
+
+
+
+
+
+
+

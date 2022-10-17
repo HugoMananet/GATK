@@ -3,7 +3,7 @@ Bootstrap: docker
 From: phusion/baseimage:0.10.2
 
 
-%label
+%labels
 
 	MAINTAINER Hugo Mananet
 

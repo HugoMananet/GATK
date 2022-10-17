@@ -1,0 +1,79 @@
+#!/bin/bash
+
+
+Bootstrap: docker
+
+From: phusion/baseimage:0.10.2
+
+
+%labels
+
+	MAINTAINER Hugo Mananet
+
+
+%environment
+
+	JAVA_LIBRARY_PATH=/usr/lib/jni
+	JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64/
+	export JAVA_LIBRARY_PATH JAVA_HOME
+		
+	gatk=/opt/GenomeAnalysisTK.jar
+	export gatk
+
+
+%files
+
+
+	GenomeAnalysisTK-3.6-0-g89b7209.tar.bz2 /opt/GenomeAnalysisTK-3.6-0-g89b7209.tar.bz2
+	
+
+%post
+
+	http_proxy="http://10.1.50.1:8080/"
+	https_proxy="http://10.1.50.1:8080/"
+	HTTP_PROXY="http://10.1.50.1:8080/"
+	HTTPS_PROXY="http://10.1.50.1:8080/"
+	ftp_proxy="http://10.1.50.1:8080/"
+	FTP_proxy="http://10.1.50.1:8080/"
+	export HTTPS_PROXY HTTP_PROXY https_proxy http_proxy ftp_proxy FTP_proxy
+
+	mkdir /soft
+	mkdir /work
+	mkdir /user1
+	mkdir /user2
+	mkdir /tmp3
+
+
+	export DEBIAN_FRONTEND=noninteractive
+	# echo 'debconf debconf/frontend select Noninteractive' | debconf-set-selections
+	# dpkg-reconfigure debconf
+
+	add-apt-repository ppa:apt-fast/stable
+	apt-get update && \
+	apt-get upgrade -y && \
+	apt-get install -y apt-fast
+
+
+	apt-fast update && \
+	apt-fast upgrade -y && \
+	apt-fast install -y build-essential \
+	wget \
+	openjdk-8-jdk \
+	software-properties-common 
+	
+	#wget -P /opt/ http://software.broadinstitute.org/gatk/download/auth?package=GATK-archive&version=3.6-0-g89b7209
+		
+	cd /opt/ && tar xfvj GenomeAnalysisTK-3.6-0-g89b7209.tar.bz2
+	
+	rm /opt/GenomeAnalysisTK-3.6-0-g89b7209.tar.bz2
+		
+	chmod 755 /opt/GenomeAnalysisTK.jar
+	
+%runscript
+	
+	exec java -jar /opt/GenomeAnalysisTK.jar "$@"
+
+	
+	
+
+	
